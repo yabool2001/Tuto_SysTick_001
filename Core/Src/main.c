@@ -33,7 +33,6 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define UART_TX_TIMEOUT		100
-#define RX_BUFF_SIZE		50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,9 +46,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 const uint8_t       hello[]         = "HELLO Tuto_SysTick_001 on G071RB !\n" ;
-const uint8_t		pressed[]		= "Button pressed" ;
-const uint8_t		released[]		= "Button released" ;
-char				tx_buff[30] ;
+char				tx_buff[10] ;
 HAL_StatusTypeDef   uart_status ;
 uint16_t			c				= 0 ;
 /* USER CODE END PV */
@@ -287,27 +284,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_GPIO_EXTI_Falling_Callback ( uint16_t GPIO_Pin )
+void test ( uint16_t GPIO_Pin )
 {
 	c++ ;
-	if ( GPIO_Pin == BUTTON_Pin )
-	{
 		sprintf ( (char *) tx_buff , "%s %u\n" , pressed , c ) ;
 		uart_status = HAL_UART_Transmit ( &huart1 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
 		uart_status = HAL_UART_Transmit ( &huart2 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
-		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_SET ) ;
-	}
-}
-void HAL_GPIO_EXTI_Rising_Callback ( uint16_t GPIO_Pin )
-{
-	c++ ;
-	if ( GPIO_Pin == BUTTON_Pin )
-	{
-		sprintf ( (char *) tx_buff , "%s %u\n" , released , c ) ;
-		uart_status = HAL_UART_Transmit ( &huart1 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
-		uart_status = HAL_UART_Transmit ( &huart2 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
-		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_RESET ) ;
-	}
 }
 /* USER CODE END 4 */
 
