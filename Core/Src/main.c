@@ -21,7 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,6 +32,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define UART_TX_TIMEOUT		100
+#define RX_BUFF_SIZE		50
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -42,7 +45,10 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+const uint8_t       hello[]         = "HELLO Tuto_SysTick_001 on G071RB !\n" ;
+const uint8_t		pressed[]		= "Button pressed\n" ;
+const uint8_t		released[]		= "Button released\n" ;
+HAL_StatusTypeDef   uart_status ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -88,7 +94,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  uart_status = HAL_UART_Transmit ( &huart2 , hello , strlen ( (const char*) hello ) , UART_TX_TIMEOUT ) ;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -98,6 +104,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -205,19 +212,44 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GREEN_GPIO_Port, LED_GREEN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GREEN_GPIO_Port, GREEN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LED_GREEN_Pin */
-  GPIO_InitStruct.Pin = LED_GREEN_Pin;
+  /*Configure GPIO pin : BUTTON_Pin */
+  GPIO_InitStruct.Pin = BUTTON_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BUTTON_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GREEN_Pin */
+  GPIO_InitStruct.Pin = GREEN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GREEN_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Falling_Callback ( uint16_t GPIO_Pin )
+{
+	if ( GPIO_Pin == BUTTON_Pin )
+	{
+		uart_status = HAL_UART_Transmit ( &huart2 , pressed , strlen ( (const char*) pressed ) , UART_TX_TIMEOUT ) ;
+		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_SET ) ;
+	}
+}
+void HAL_GPIO_EXTI_Rising_Callback ( uint16_t GPIO_Pin )
+{
+	if ( GPIO_Pin == BUTTON_Pin )
+	{
+		uart_status = HAL_UART_Transmit ( &huart2 , released , strlen ( (const char*) released ) , UART_TX_TIMEOUT ) ;
+		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_RESET ) ;
+	}
+}
 /* USER CODE END 4 */
 
 /**
