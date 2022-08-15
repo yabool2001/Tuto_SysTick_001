@@ -42,19 +42,23 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 const uint8_t       hello[]         = "HELLO Tuto_SysTick_001 on G071RB !\n" ;
-const uint8_t		pressed[]		= "Button pressed\n" ;
-const uint8_t		released[]		= "Button released\n" ;
+const uint8_t		pressed[]		= "Button pressed" ;
+const uint8_t		released[]		= "Button released" ;
+char				tx_buff[30] ;
 HAL_StatusTypeDef   uart_status ;
+uint16_t			c				= 0 ;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -93,6 +97,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   uart_status = HAL_UART_Transmit ( &huart2 , hello , strlen ( (const char*) hello ) , UART_TX_TIMEOUT ) ;
   /* USER CODE END 2 */
@@ -147,6 +152,54 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
 }
 
 /**
@@ -236,17 +289,23 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Falling_Callback ( uint16_t GPIO_Pin )
 {
+	c++ ;
 	if ( GPIO_Pin == BUTTON_Pin )
 	{
-		uart_status = HAL_UART_Transmit ( &huart2 , pressed , strlen ( (const char*) pressed ) , UART_TX_TIMEOUT ) ;
+		sprintf ( (char *) tx_buff , "%s %u\n" , pressed , c ) ;
+		uart_status = HAL_UART_Transmit ( &huart1 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
+		uart_status = HAL_UART_Transmit ( &huart2 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
 		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_SET ) ;
 	}
 }
 void HAL_GPIO_EXTI_Rising_Callback ( uint16_t GPIO_Pin )
 {
+	c++ ;
 	if ( GPIO_Pin == BUTTON_Pin )
 	{
-		uart_status = HAL_UART_Transmit ( &huart2 , released , strlen ( (const char*) released ) , UART_TX_TIMEOUT ) ;
+		sprintf ( (char *) tx_buff , "%s %u\n" , released , c ) ;
+		uart_status = HAL_UART_Transmit ( &huart1 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
+		uart_status = HAL_UART_Transmit ( &huart2 , (uint8_t*) tx_buff , strlen ( (const char*) tx_buff ) , UART_TX_TIMEOUT ) ;
 		HAL_GPIO_WritePin ( GREEN_GPIO_Port , GREEN_Pin , GPIO_PIN_RESET ) ;
 	}
 }
